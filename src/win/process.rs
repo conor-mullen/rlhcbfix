@@ -6,8 +6,9 @@ use std::path::PathBuf;
 use winapi::shared::basetsd::{ULONG64, DWORD_PTR};
 use winapi::shared::minwindef::{DWORD, MAX_PATH};
 use winapi::um::handleapi::INVALID_HANDLE_VALUE;
-use winapi::um::processthreadsapi::{GetProcessId, GetThreadIdealProcessorEx, OpenProcess,
-                                    OpenThread, SetThreadIdealProcessor};
+use winapi::um::processthreadsapi::{GetExitCodeProcess, GetProcessId, GetThreadId,
+                                    GetThreadIdealProcessorEx, OpenProcess, OpenThread,
+                                    SetThreadIdealProcessor};
 use winapi::um::realtimeapiset::QueryThreadCycleTime;
 use winapi::um::tlhelp32::{CreateToolhelp32Snapshot, PROCESSENTRY32, Process32Next,
                            TH32CS_SNAPALL, TH32CS_SNAPTHREAD, THREADENTRY32, Thread32Next};
@@ -54,6 +55,15 @@ impl Process {
     /// Returns the process's id.
     pub fn id(&self) -> u32 {
         unsafe { GetProcessId(self.handle.as_raw_handle()) }
+    }
+
+    /// Returns true if the process is running.
+    pub fn running(&self) -> bool {
+        unsafe {
+            let mut status = 0;
+            GetExitCodeProcess(self.handle.as_raw_handle(), &mut status);
+            status == 259
+        }
     }
 
     /// Returns the path of the executable of the process.
@@ -115,6 +125,20 @@ impl Process {
             }
         }
     }
+
+    pub fn thread_ids<'a>(&'a self) -> WinResult<impl Iterator<Item = u32> + 'a> {
+        unsafe {
+            let snap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+            if snap == INVALID_HANDLE_VALUE {
+                Err(win::Error::last())
+            } else {
+                Ok(ThreadIdIter {
+                    process: &self,
+                    snapshot: Handle::new(snap),
+                })
+            }
+        }
+    }
 }
 
 struct ProcessIter {
@@ -157,6 +181,10 @@ impl Thread {
                 })
             }
         }
+    }
+
+    pub fn id(&self) -> u32 {
+        unsafe { GetThreadId(self.handle.as_raw_handle()) }
     }
 
     /// Returns the thread's cycle time.
@@ -239,12 +267,38 @@ impl<'a> Iterator for ThreadIter<'a> {
                 let mut entry: THREADENTRY32 = mem::zeroed();
                 entry.dwSize = mem::size_of::<THREADENTRY32>() as DWORD;
                 let ret = Thread32Next(self.snapshot.as_raw_handle(), &mut entry);
-                //            if ret == 0 || win::Error::last().code() == 18 {
                 if ret == 0 {
                     return None;
                 } else {
                     if entry.th32OwnerProcessID == self.process.id() {
                         return Some(Thread::from_id(entry.th32ThreadID));
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+struct ThreadIdIter<'a> {
+    process: &'a Process,
+    snapshot: Handle,
+}
+
+impl<'a> Iterator for ThreadIdIter<'a> {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<u32> {
+        unsafe {
+            loop {
+                let mut entry: THREADENTRY32 = mem::zeroed();
+                entry.dwSize = mem::size_of::<THREADENTRY32>() as DWORD;
+                let ret = Thread32Next(self.snapshot.as_raw_handle(), &mut entry);
+                if ret == 0 {
+                    return None;
+                } else {
+                    if entry.th32OwnerProcessID == self.process.id() {
+                        return Some(entry.th32ThreadID);
                     }
                 }
             }

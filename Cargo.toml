@@ -5,7 +5,10 @@ authors = ["Sam Green <sam.green81@gmail.com>"]
 
 [dependencies]
 failure = "0.1.1"
+log = "0.4"
+pretty_env_logger = "0.2"
 structopt = "0.2"
 winapi = { version = "0.3.4", features = ["handleapi", "tlhelp32", "realtimeapiset"] }
+#itertools = "0.7"
 #widestring = "0.3.0"
 ta = "0.1.0"

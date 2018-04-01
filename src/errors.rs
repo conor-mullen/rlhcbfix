@@ -1,9 +1,11 @@
 use win;
 
-#[derive(Fail, Debug)]
+#[derive(Debug, Fail)]
 pub enum Error {
     #[fail(display = "Windows error: {:?}", _0)]
-    Windows(win::Error),
+    Windows(#[cause] win::Error),
+    #[fail(display = "No Rocket League process found.")]
+    NoProcess,
 }
 
 pub type HcbResult<T> = ::std::result::Result<T, Error>;
