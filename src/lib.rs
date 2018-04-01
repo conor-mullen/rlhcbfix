@@ -39,6 +39,30 @@ fn wait_for_three_threads(
     }
 }
 
+fn top_three_ideal(ids: &[u32; 3], process: &mut MonitoredProcess) -> HcbResult<[u32; 3]> {
+    let mut get_ideal = |i| {
+        process
+            .threads_mut()
+            .get_mut(&ids[i])
+            .unwrap()
+            .thread()
+            .ideal_processor()
+    };
+    Ok([get_ideal(0)?, get_ideal(1)?, get_ideal(2)?])
+}
+
+fn set_top_three_ideal(ids: &[u32; 3], process: &mut MonitoredProcess) -> HcbResult<()> {
+    for core in 0u32..3 {
+        process
+            .threads_mut()
+            .get_mut(&ids[core as usize])
+            .unwrap()
+            .thread_mut()
+            .set_ideal_processor(core)?;
+    }
+    Ok(())
+}
+
 /// Monitors the Rocket League process, assigning its three most active threads to separate cores.
 pub fn manage_rl_threads(poll_interval: Duration, settling_period: Duration) -> HcbResult<()> {
     let mut process = rl_process().and_then(|p| MonitoredProcess::new(p))?;
@@ -87,18 +111,15 @@ pub fn manage_rl_threads(poll_interval: Duration, settling_period: Duration) -> 
             }
             if !stable && last_changed.elapsed() > settling_period {
                 info!("Assigning thread affinities.");
-                for core in 0u32..3 {
-                    process
-                        .threads_mut()
-                        .get_mut(&prev_top_three[core as usize])
-                        .unwrap()
-                        .thread_mut()
-                        .set_ideal_processor(core)?;
-                }
+                set_top_three_ideal(&prev_top_three, &mut process)?;
                 set_top_three = Some(prev_top_three);
                 stable = true;
                 notified_changing_soon = false;
             }
+        }
+        if stable && &top_three_ideal(&current_top_three, &mut process)? != &[0, 1, 2] {
+            info!("Correcting affinities.");
+            set_top_three_ideal(&prev_top_three, &mut process)?;
         }
         thread::sleep(poll_interval)
     }

@@ -201,7 +201,7 @@ impl Thread {
     }
 
     /// Gets the preferred processor for the thread.
-    pub fn ideal_processor(&mut self) -> WinResult<u32> {
+    pub fn ideal_processor(&self) -> WinResult<u32> {
         unsafe {
             let mut ideal: PROCESSOR_NUMBER = mem::zeroed();
             let ret = GetThreadIdealProcessorEx(self.handle.as_raw_handle(), &mut ideal);
