@@ -306,32 +306,32 @@ impl<'a> Iterator for ThreadIdIter<'a> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn enumerates_processes() {
-        let procs: Vec<_> = Process::all().unwrap().collect();
-        assert_eq!(procs.is_empty(), false);
-        println!("{:?}", procs);
-    }
-
-    #[test]
-    fn accesses_process_names() {
-        let names: Vec<_> = Process::all()
-            .unwrap()
-            .filter_map(|p| p.name().ok())
-            .collect();
-        assert_eq!(names.is_empty(), false);
-        println!("{:?}", names);
-    }
-
-    #[test]
-    fn enumerates_threads() {
-        let process = Process::all().unwrap().nth(0).unwrap();
-        let threads: Vec<_> = process.threads().unwrap().collect();
-        assert_eq!(threads.is_empty(), false);
-        println!("{:?}", threads);
-    }
-}
+//#[cfg(test)]
+//mod tests {
+//    use super::*;
+//
+//    #[test]
+//    fn enumerates_processes() {
+//        let procs: Vec<_> = Process::all().unwrap().collect();
+//        assert_eq!(procs.is_empty(), false);
+//        println!("{:?}", procs);
+//    }
+//
+//    #[test]
+//    fn accesses_process_names() {
+//        let names: Vec<_> = Process::all()
+//            .unwrap()
+//            .filter_map(|p| p.name().ok())
+//            .collect();
+//        assert_eq!(names.is_empty(), false);
+//        println!("{:?}", names);
+//    }
+//
+//    #[test]
+//    fn enumerates_threads() {
+//        let process = Process::all().unwrap().nth(0).unwrap();
+//        let threads: Vec<_> = process.threads().unwrap().collect();
+//        assert_eq!(threads.is_empty(), false);
+//        println!("{:?}", threads);
+//    }
+//}

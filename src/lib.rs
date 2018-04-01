@@ -104,13 +104,13 @@ pub fn manage_rl_threads(poll_interval: Duration, settling_period: Duration) -> 
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn finds_rl() {
-        let process = rl_process().unwrap();
-        println!("{:?}", process)
-    }
-}
+//#[cfg(test)]
+//mod tests {
+//    use super::*;
+//
+//    #[test]
+//    fn finds_rl() {
+//        let process = rl_process().unwrap();
+//        println!("{:?}", process)
+//    }
+//}

@@ -2,6 +2,10 @@
 name = "rlhcbfix"
 version = "0.1.0"
 authors = ["Sam Green <sam.green81@gmail.com>"]
+publish = false
+repository = "https://github.com/green-s/rlhcbfix"
+readme = "README.md"
+license = "MIT"
 
 [dependencies]
 failure = "0.1.1"
@@ -11,4 +15,4 @@ structopt = "0.2"
 winapi = { version = "0.3.4", features = ["handleapi", "tlhelp32", "realtimeapiset"] }
 #itertools = "0.7"
 #widestring = "0.3.0"
-ta = "0.1.0"
+#ta = "0.1.0"
