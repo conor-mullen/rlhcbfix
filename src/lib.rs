@@ -52,13 +52,18 @@ fn top_three_ideal(ids: &[u32; 3], process: &mut MonitoredProcess) -> HcbResult<
 }
 
 fn set_top_three_ideal(ids: &[u32; 3], process: &mut MonitoredProcess) -> HcbResult<()> {
-    for core in 0u32..3 {
+    println!("{:?}", ids);
+    let mut core_num = 0;
+    for core in (0u32..3) {
+        core_num = ((core + 1) * 2) - 1;
+        let s: String = core_num.to_string();
+        println!("{}", s);
         process
             .threads_mut()
             .get_mut(&ids[core as usize])
             .unwrap()
             .thread_mut()
-            .set_ideal_processor(core)?;
+            .set_ideal_processor(core_num)?;
     }
     Ok(())
 }
@@ -117,7 +122,7 @@ pub fn manage_rl_threads(poll_interval: Duration, settling_period: Duration) -> 
                 notified_changing_soon = false;
             }
         }
-        if stable && &top_three_ideal(&current_top_three, &mut process)? != &[0, 1, 2] {
+        if stable && &top_three_ideal(&current_top_three, &mut process)? != &[1, 3, 5] {
             info!("Correcting affinities.");
             set_top_three_ideal(&prev_top_three, &mut process)?;
         }
